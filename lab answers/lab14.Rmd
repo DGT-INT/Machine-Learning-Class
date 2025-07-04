@@ -1,0 +1,102 @@
+---
+title: "Lab 14"
+author: "Daniel Tshiani"
+date: "2025-06-18"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(e1071)
+library(tidyverse)
+load("../data/Auto-3.rda")
+attach(Auto)
+```
+
+# a
+```{r}
+ECO = ifelse( mpg > 22.75, "Economy", "Consuming")
+Auto$ECO <- as.factor(ECO)
+rm(ECO)
+attach(Auto)
+
+svm <- svm(ECO ~., data = Auto)
+svm
+plot(weight, horsepower, col = as.numeric(Auto$ECO))
+```
+in the visualization we can see that the 2 classes overlap, so SVM is not a good option here.
+
+# b
+```{r}
+d = data.frame(ECO, weight, horsepower)
+svm <- svm(ECO ~., data = d, kernel = "linear")
+summary(svm)
+plot(svm, data = Auto[, c(4, 5, 10)])
+```
+the hyperplane does a better job in seperating the different class ECO but there is still some overlap.
+
+# c
+```{r}
+svm_poly <- svm(ECO ~., data = d, kernel = "polynomial")
+plot(svm_poly, data = Auto[, c(4, 5, 10)])
+```
+```{r}
+svm_s <- svm(ECO ~., data = d, kernel = "sigmoid")
+plot(svm_s, data = Auto[, c(4, 5, 10)])
+```
+
+
+# d
+```{r}
+rm(svm)
+set.seed(1234)
+svm_c <- tune(svm, ECO ~ ., data = d, ranges = list(cost = c(0.001, 0.01, 0.1, 1, 10, 100,
+1000), kernel = c("linear", "polynomial", "radial", "sigmoid")))
+```
+
+```{r}
+summary(svm_c)
+```
+
+
+# e
+```{r}
+1 - svm_c$performances[svm_c$performances$error == min(svm_c$performances$error),]$error
+```
+
+
+# f
+```{r}
+Auto$ECO = ifelse( mpg < 17, "Low Consuming",
+                   ifelse( mpg < 29, "Mid Consuming", "Economy"))
+Auto$ECO <- as.factor(Auto$ECO)
+attach(Auto)
+```
+```{r}
+plot(weight, horsepower, col = as.numeric(Auto$ECO))
+```
+
+```{r}
+d = data.frame(ECO, weight, horsepower)
+svm <- svm(ECO ~., data = d, kernel = "linear")
+summary(svm)
+plot(svm, data = Auto[, c(4, 5, 10)])
+```
+```{r}
+rm(svm)
+set.seed(1234)
+svm_c <- tune(svm, ECO ~ ., data = d, ranges = list(cost = c(0.001, 0.01, 0.1, 1, 10, 100,
+1000), kernel = c("linear", "polynomial", "radial", "sigmoid")))
+```
+```{r}
+summary(svm_c)
+```
+```{r}
+1 - svm_c$performances[svm_c$performances$error == min(svm_c$performances$error),]$error
+```
+

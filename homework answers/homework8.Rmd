@@ -1,0 +1,27 @@
+---
+title: "Homework 8"
+author: "Daniel Tshiani"
+date: "2025-06-18"
+output:
+  pdf_document:
+    latex: xelatex
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# a
+```{r}
+
+```
+
+
+# b
+# c
+# d
+# e
+# f
+# g
+# H 

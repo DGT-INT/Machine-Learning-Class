@@ -1,0 +1,186 @@
+---
+title: "Homework 3"
+author: "Daniel Tshiani"
+date: "2025-06-01"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ISLR)
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+load("../data/Auto-3.rda")
+```
+
+# 1
+
+## a
+```{r}
+pairs(Auto)
+```
+## b
+```{r}
+Auto <- Auto%>%
+  select(-name)
+
+cor(Auto)
+```
+
+## c
+```{r}
+lm <- lm(mpg ~ ., data = Auto)
+summary(lm)
+```
+displacement, year and origin all appear to have a positive significant relationships with mpg. weight appears to have a negative significant relationship with mpg. the other variables appear to have insignificant relationships with mpg.
+
+## d
+
+```{r}
+par(mfrow=c(2,2))
+plot(lm)
+```
+the residual plot suggest heteroscedaticity because the spread appears to increase. in the qq-plot towards the higher quartiles, the point deviate above the diagonal line which suggest a deviation from normality. it could possible be due to outliers or skewness.
+
+in the residuals vs leverage plot, there is one point way out to the right at around 0.19 leverage. that point appears to have high influence on the model.
+
+## e
+```{r}
+lm2 <- lm(mpg ~ . + weight * acceleration + cylinders * horsepower, data = Auto)
+summary(lm2)
+```
+the interaction between weight and acceleration does not appear to be statistically significant, however the interaction between cylinders and horsepower appears to be statistically significant.
+
+## f
+```{r}
+lm3 <- lm(mpg ~ . + log(horsepower), data = Auto)
+summary(lm3)
+```
+just focusing on horsepower:
+- when i took the log transformation of horsepower, it became statisticaly significant and the effect of horsepower on mpg became positive.
+
+```{r}
+lm4 <- lm(mpg ~ . + sqrt(horsepower), data = Auto)
+summary(lm4)
+```
+just focusing on horsepower:
+- when i took the log transformation of horsepower, it became statisticalys significant and the effect of horsepower on mpg became positive. however, one unit change in horsepower increases the model 4 by 4.2 units compared to 1.7 units in model 3.
+
+```{r}
+lm5 <- lm(mpg ~ . + I(horsepower^2), data = Auto)
+summary(lm5)
+```
+interestingly, making horsepower quadratic also makes it statistically significant. however, the influence on horsepower on mpg has become negative.
+
+# 2
+
+```{r}
+rm(list = ls())
+load("../data/Carseats.rda")
+```
+
+## a
+```{r}
+lm <- glm(Sales ~ Price + Urban + US, data=Carseats)
+summary(lm)
+```
+
+## b
+
+Sales = 13.043 - 0.054 * Price - 0.022 * UrbanYes + 1.201 * USYes
+
+Where:
+UrbanYes = 1 if Urban == "Yes", else 0
+USYes = 1 if US == "Yes", else 0
+
+Urban = "No", US = "No"
+Sales = 13.043 - 0.054 * Price
+
+Urban = "Yes", US = "No"
+Sales = (13.043 - 0.022) - 0.054 * Price
+Sales = 13.021 - 0.054 * Price
+
+Urban = "No", US = "Yes"
+Sales = (13.043 + 1.201) - 0.054 * Price
+Sales = 14.244 - 0.054 * Price
+
+Urban = "Yes", US = "Yes"
+Sales = (13.043 - 0.022 + 1.201) - 0.054 * Price
+Sales = 14.222 - 0.054 * Price
+
+## c
+looking at the p value, we would reject the hypothesis of beta_j = 0 for price and USYes. the p-value is less that 0.01
+
+## d 
+```{r}
+reduced_model <- glm(Sales ~ Price + US, data=Carseats)
+anova(reduced_model, lm)
+```
+the f-stat is 0.0065 which means that this partial f test agrees that urban does not sifnificantly improve the model.
+
+## e
+```{r}
+par(mfrow = c(2, 2))
+plot(lm)
+```
+```{r}
+outliers <- rstandard(lm)
+outliers_df <- data.frame(outliers)
+
+outliers_df <- outliers_df %>%
+  filter(abs(outliers) > 3)
+
+head(outliers_df)
+```
+to be honest, i am not finding anything out the ordinary with the data from the plots and there arent any outliers when using 3 as a threshold.
+
+## f
+```{r}
+Carseats$USyes <- 1 * (Carseats$US == "Yes")
+library(car)
+vif(lm)
+```
+the vifs are under 2 which means that there is low multicolinearity.
+
+## g
+```{r}
+stud_resid <- rstudent(lm)
+n <- nrow(Carseats)     
+p <- length(coef(lm))
+alpha <- 0.05         
+
+# Bonferroni-adjusted critical t-value
+t_crit <- qt(1 - alpha / (2 * n), df = n - p)
+
+outliers <- which(abs(stud_resid) > t_crit)
+
+Carseats[outliers, ]
+```
+again, i do not get any outliers that are significant.
+
+## h
+```{r}
+residuals <- resid(lm)
+shapiro.test(residuals)
+```
+p value is greater than 0.05 which means the residuals are likely normally distributed.
+
+## i
+```{r}
+plot(Carseats$Sales, Carseats$Price)
+```
+```{r}
+model_linear <- lm(Sales ~ Price, data = Carseats)
+model_full <- lm(Sales ~ Price + I(Price^2), data = Carseats)
+anova(model_linear, model_full)
+```
+there is a linear relationship because in my test the f value is 0.1193 and the p value is0.73. this means the linear models performs just was well as the quadratic model.

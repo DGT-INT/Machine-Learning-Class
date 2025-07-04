@@ -1,0 +1,124 @@
+---
+title: "Lab 12"
+author: "Daniel Tshiani"
+date: "2025-06-13"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tree)
+library(tidyverse)
+```
+
+# 1
+
+```{r}
+load("../data/Auto-3.rda")
+attach(Auto)
+```
+
+## a
+```{r}
+Auto$ECO <- ifelse(mpg > median(mpg), "Economy", "Consuming")
+table(Auto$ECO)
+```
+```{r}
+glimpse(Auto)
+Auto$ECO <- as.factor(Auto$ECO)
+```
+```{r}
+tree(ECO ~ .-name, Auto)
+```
+
+## b
+```{r}
+tree_model <- tree(ECO ~ .-name -mpg, Auto)
+plot(tree_model, type = "uniform")
+```
+
+```{r}
+summary(tree_model)
+```
+the misclassification rate is about 4%
+
+## c
+```{r}
+set.seed(123)
+train_indices <- sample(1:nrow(Auto), nrow(Auto)/2)
+train_data <- Auto[train_indices, ]
+test_data <- Auto[-train_indices, ]
+```
+
+```{r}
+train_model <- tree(ECO ~ . -name - mpg, data = train_data)
+
+test_preds <- predict(train_model, newdata= test_data, type = "class")
+
+conf_mat <- table(Predicted = test_preds, Actual = test_data$ECO)
+conf_mat
+```
+
+```{r}
+accuracy <- sum(diag(conf_mat)) / sum(conf_mat)
+accuracy
+```
+the accuracy is about 88% which is less than the previous accuracy. the previous accuracy was about 96%.
+
+## d
+```{r}
+cv <- cv.tree(tree_model)
+cv
+```
+```{r}
+cv$size[which.min(cv$dev)]
+```
+
+```{r}
+plot(cv)
+```
+optimal complexity of a tree is 15.
+
+## e
+```{r}
+cv_m <- cv.tree(train_model, FUN = prune.misclass)
+cv_m
+```
+```{r}
+plot(cv_m)
+```
+```{r}
+cv_m$size[which.min(cv$dev)]
+```
+optimal complexity would be at 9 nodes
+
+## f
+```{r}
+opt_m <- prune.misclass(train_model, best = 9)
+plot(opt_m)
+text(opt_m)
+```
+
+# 2
+
+```{r}
+load("../data/Auto-3.rda")
+attach(Auto)
+```
+
+```{r}
+tree.mpg <- tree(mpg ~ .-name-origin + as.factor(origin), Auto)
+tree.mpg
+```
+```{r}
+plot(tree.mpg, type = "uniform"); text(tree.mpg)
+```
+```{r}
+summary(tree.mpg)
+```
+

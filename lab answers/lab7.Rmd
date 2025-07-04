@@ -1,0 +1,88 @@
+---
+title: "Lab 7"
+author: "Daniel Tshiani"
+date: "2025-05-26"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# a
+
+```{r}
+library(ISLR)
+library(dplyr)
+load("../data/Auto-3.rda")
+```
+
+# b
+```{r}
+Auto <- Auto %>%
+  mutate(Economy = case_when(
+    mpg <= 17 ~ "Heavy",
+    mpg <= 22.75 ~ "OK",
+    mpg <= 29 ~ "Eco",
+    mpg > 29 ~ "Excellent"
+  )) %>%
+  mutate(Economy = as.factor(Economy)) %>%
+  mutate(origin = as.factor(origin))
+```
+
+# c
+```{r}
+library(MASS)
+table(Auto$Economy)
+
+lda_result <- lda(Economy ~ mpg + cylinders + displacement + weight + acceleration + year + origin, data = Auto)
+lda_result
+```
+Heavy economy cars tend to have more cylinders, more displacement, higher weight, and lower mpg.
+Excellent and Eco economy cars tend to be lighter and more fuel efficient.
+
+# d
+```{r}
+library(MASS)
+
+lda_cv <- lda(Economy ~ mpg + cylinders + displacement + weight + acceleration + year + origin, data = Auto, CV = TRUE)
+
+conf_matrix <- table(True = Auto$Economy, Predicted = lda_cv$class)
+print(conf_matrix)
+```
+```{r}
+accuracy <- mean(Auto$Economy == lda_cv$class)
+print(paste("Classification accuracy (CV):", round(accuracy * 100, 2), "%"))
+```
+# e
+```{r}
+lda_cv_prior <- lda(Economy ~ mpg + cylinders + displacement + weight + acceleration + year + origin,
+                    data = Auto,
+                    prior = c(0.25, 0.25, 0.25, 0.25),
+                    CV = TRUE)
+
+conf_matrix_prior <- table(True = Auto$Economy, Predicted = lda_cv_prior$class)
+print(conf_matrix_prior)
+
+accuracy_prior <- mean(Auto$Economy == lda_cv_prior$class)
+print(paste("Classification accuracy with custom priors:", round(accuracy_prior * 100, 2), "%"))
+```
+the classification accuracy slightly decreased.
+
+# f
+```{r}
+lda_cv_prior2 <- lda(Economy ~ mpg + cylinders + displacement + weight + acceleration + year + origin,
+                    data = Auto,
+                    prior = c(0.4,0.3,0.2,0.1),
+                    CV = TRUE)
+
+conf_matrix_prior2 <- table(True = Auto$Economy, Predicted = lda_cv_prior2$class)
+print(conf_matrix_prior2)
+
+accuracy_prior2 <- mean(Auto$Economy == lda_cv_prior2$class)
+print(paste("Classification accuracy with custom priors:", round(accuracy_prior2 * 100, 2), "%"))
+```
+the classification accuracy slightly decreased again.
+

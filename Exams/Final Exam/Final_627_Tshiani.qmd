@@ -1,0 +1,463 @@
+---
+title: "STAT-427/627 Final 24S"
+subtitle: "Name: _______________________________  Course: _____________"
+number-sections: true
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    number_sections: true
+    keep_tex: true
+    toc: false
+    includes:
+      in_header: preamble.tex
+    extra_dependencies: ["geometry"]
+    self_contained: true
+---
+
+
+Be brief but show your reasoning (partial credit?). **Label your work and answers for each problem if on a different page.** Put your name on each piece of paper. You can use your notes, textbook, calculator, and computer and the internet to access course materials.
+
+- Recommend you do the problem one plots on paper instead of taking the time to code. Turn in the paper and as an option, you con take a picture and put the file in the same folder as your code file. Use the following rmarkdown syntax at the appropriate location to embed the file into your output. ![My caption](myfile.png).
+
+-   Each problem is 20 points. Total points = 40.  Time = 2 hr 30 min.
+
+# Insurance Predictions: Do by hand.
+
+An insurance company wants to predict if a new customer will have a major operation within 10 years. They select 11 customers at random as training data to predict an operation based on the customer's age and their average annual cost of medical care.
+
+| Person           |  A  |  B  |  C  |  D  |  E  |  F  |  G  |  H  |  I  |  J  |  K  |
+|------------------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Age              | 20  | 22  | 23  | 24  | 25  | 26  | 27  | 29  | 32  | 35  | 37  |
+| Average Cost     |  5  | 11  |  8  |  9  | 15  | 19  | 24  | 21  | 18  | 20  | 17  |
+| Had an Operation |  N  |  Y  |  N  |  N  |  N  |  Y  |  Y  |  N  |  N  |  Y  |  Y  |
+
+
+To classify future insured, the company partitions its predictor space (Age, Cost) as on the right (see hard copy).
+
+
+\(a\) Plot the persons *using their label* on the  partition plot.
+
+-   Draw a classification tree that corresponds to this partition.
+-   At each internal node, state the splitting condition and threshold.
+-   At each terminal (leaf) node, state the predicted response.
+
+
+
+\(b\) Fill in the following table with the prediction for each point based on your tree.
+
+-   Fill out the confusion matrix.
+-   Calculate the *training* classification rate from the confusion matrix.
+
+| Person           |  A  |  B  |  C  |  D  |  E  |  F  |  G  |  H  |  I  |  J  |  K  |
+|------------------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Age              | 20  | 22  | 23  | 24  | 25  | 26  | 27  | 29  | 32  | 35  | 37  |
+| Average Cost     |  5  | 11  |  8  |  9  | 15  | 19  | 24  | 21  | 18  | 20  | 17  |
+| Had an Operation |  N  |  Y  |  N  |  N  |  N  |  Y  |  Y  |  N  |  N  |  Y  |  Y  |
+| Prediction?      |     |     |     |     |     |     |     |     |     |     |     |   
+
+|             |           |         |
+|:-----------:|:---------:|:-------:|
+|             | Pred Yes  | Pred No |
+| Actual-Yes  |          |        |
+|  Actual-No  |          |       |
+
+
+- Classification Rate?
+
+
+\(c\) A random forest is constructed for the same data. It has 3 trees and each is pruned to 1 split with 2 terminal nodes:
+
+-   The 1st tree sample is persons A, C, C, D, E, E, F, F, F, G, I. It splits on Cost.
+-   The 2nd tree sample is persons A, C, D, D, E, F, F, G, G, H, K. It splits on Age.
+-   The 3rd tree sample is persons A, A, D, D, E, E, F, G, J, K, K. It splits on Cost.
+
+The following table summarizes the data for the forest.
+
+::: table-striped
+| Person           |  A  |  B  |  C  |  D  |  E  |  F  |  G  |  H  |  I  |  J  |  K  |
+|------------------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Age              | 20  | 22  | 23  | 24  | 25  | 26  | 27  | 29  | 32  | 35  | 37  |
+| Average Cost     |  5  | 11  |  8  |  9  | 15  | 19  | 24  | 21  | 18  | 20  | 17  |
+| Had an Operation |  N  |  Y  |  N  |  N  |  N  |  Y  |  Y  |  N  |  N  |  Y  |  Y  |
+| Tree 1           |  1  |     |  2  |  1  |  2  |  3  |  1  |     |  1  |     |     |
+| Tree 2           |  1  |     |  1  |  2  |  1  |  2  |  2  |  1  |     |     |  1  |
+| Tree 3           |  2  |     |     |  2  |  2  |  1  |  1  |     |     |  1  |  2  |
+:::
+
+-   In the following plots, put a number next to each point for how many times it is in the tree and line through the Out-Of-Bag points
+-   For each tree, draw a single partition for the given variable at the threshold which creates the terminal nodes as pure as possible. 
+- Below the three plots, for each tree, indicate the number of pure nodes (if any) for each tree and  your calculation of the threshold value based on the closest points on either side of the threshold. You do **not** need to calculate the Gini impurity index.
+-   For each tree, plot a New customer with age 26 with an average cost of 18.
+-   Use this random forest to predict whether the New customer will have an operation and explain your reasoning for the prediction.
+
+
+Number of pure nodes, Threshold, and Prediction for each tree?
+
+The 1^st^ tree:
+
+
+The 2^nd^ tree:
+
+
+The 3^rd^ tree:
+
+
+Overall Prediction for the new Customer and Rationale:
+
+
+\(d\) (STAT-627 only) Calculate the *prediction* error rate of the random forest in question (c), using out-of-bag (OOB) data.
+
+-   Using your thresholds from part (c), fill in the following table with the predictions for only the OOB persons in each tree.
+-   Calculate the overall OOB prediction for each OOB person.
+-   Indicate if each overall OOB prediction is an error or not (1, 0).
+-   Calculate the prediction error rate.
+-   What would you recommend to improve the prediction error rate?
+
+| Person           |  A  |  B  |  C  |  D  |  E  |  F  |  G  |  H  |  I  |  J  |  K  |
+|------------------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Tree 1           |     |    |     |     |     |     |     |     |     |    |    |    
+| Tree 2           |     |    |    |     |     |     |     |     |    |    |    |     
+| Tree 3           |     |     |    |     |     |     |     |     |    |     |     |   
+|------------------|---|---|---|---|---|---|---|--|---|---|---|
+| Predicted        |     |    |  |     |     |     |     |     |   |    |    |     
+| Had an Operation |  N  |  Y  |  N  |  N  |  N  |  Y  |  Y  |  N  |  N  |  Y  |  Y  |
+| Error?           |     |    |    |     |     |     |     |     |    |    |    |    
+
+
+\(e\) Is there a *maximal margin* classifier for this dataset? Explain your answer. Consider drawing some lines on the scatterplot you created in (a).
+
+
+
+\(f\) Consider the following plot from an SVM classifier. (see hard copy)
+
+-   How many support vectors are there?
+-   What type of kernel is being used based on the plot and why?
+-   What is the training classification rate?
+
+
+# College Scorecard Data
+
+
+The US Department of Education collects data from every "college" level institution in America and makes a lot of data available under the [College Scorecard](https://collegescorecard.ed.gov/).
+
+-   This question uses a curated extract of the college scorecard data. The variable names and definitions are at the end.
+-   This dataset has 23 variables of data on 1,695 four-year colleges.
+-   This dataset is on Canvas or at "https://raw.githubusercontent.com/AU-datascience/data/main/427-627/college_scorecard_extract_sep_2023.csv".
+
+We want to predict the Endowment of a new colleges given the other variables as potential predictors.
+
+In the following steps, build models to predict the College Endowment (`ENDOWBEGIN`) and use $K=10$-fold cross-validation to tune and evaluate predictive performance with **`set.seed(123)` as appropriate.**
+
+-   For each problem, describe your approach, your R code, the most important results, and your interpretation of the results.
+
+-   You may write your responses on this document by hand after running code in R and/or submit a file on Canvas with your approach, code, results, and interpretation of results.
+
+## Multiple Linear Regression Regularization
+
+-   Load the data and assign the name `college` to it. Get rid of any records with `NA`s and divided `ENDOWBEGIN` by 1 million to reduce the scale. Glimpse `college`.
+
+```{r}
+#| message: false
+library(tidyverse)
+college <- read_csv("https://raw.githubusercontent.com/AU-datascience/data/main/427-627/college_scorecard_extract_sep_2023.csv")
+college <- na.omit(college)
+college$ENDOWBEGIN <- college$ENDOWBEGIN/1000000
+#college <- read_csv("./data/college_scorecard_extract_sep_2023.csv")
+#glimpse(college) 
+```
+
+-   Fit a multiple linear regression of Endowment ($ENDOWBEGIN$) on all the other variables as a full model.
+```{r}
+full_model <- lm(ENDOWBEGIN ~ ., data = college)
+```
+
+-   How many predictors appear important with a $p$ value less than 0.1?
+```{r}
+summary(full_model)
+```
+there are 6 predictors with atleast 2 stars so their p-values are less than 0.01.
+
+-   Which of those increase the endowment?
+AVGFACSAL, MN_EARN_WNE_P10, and PCIP27
+
+Do any of the variables have a high generalized variance inflation factor GVIF? If any, which ones and do they make sense as having high GVIF given the other variables?
+
+```{r}
+library(car)
+vif_values <- vif(full_model)
+vif_values
+```
+
+using 5 as my GVIF threshold, it appears the following variables may be subject to multicollinearity: AVGFACSAL, CONTROL, COSTT4_A, MD_EARN_WNE_P10, MN_EARN_WNE_P10, PCT_BLACK, PCT_ASIAN, PCT_WHITE, REGION, SAT_AVG
+
+Refit a reduced model without `MN_EARN_WNE_P10` and `PCT_WHITE`. Are there any changes in significant variables?
+
+```{r}
+reduced_model <- lm(ENDOWBEGIN ~ . - MN_EARN_WNE_P10 - PCT_WHITE, data = college)
+summary(reduced_model)
+```
+now for significant variables we have PCT_HISPANIC, PCT_ASIAN, PCIP27, GRAD_DEBT_MDN, FIRST_GEN, CONTROLPublic, AVGFACSAL, ADM_RATE
+
+-   Check the GVIF again and comment on any changes.
+
+```{r}
+vif(reduced_model)
+```
+now for variables subject to multicolinearity we have: AVGFACSAL, CONTROL, COSTT4_A, REGION, SAT_AVG.
+
+
+-   Create a new data frame with the variables below (you can use the following code).
+    -   Remove the rows with `REGION = "Outlying Regions"`.
+    -   Convert all character variables to factors.
+
+```{r}
+college |>
+  dplyr::select(
+     ENDOWBEGIN, ADM_RATE, AVGFACSAL, CONTROL,FIRST_GEN, GRAD_DEBT_MDN, PCIP27, 
+PCT_ASIAN, REGION
+  ) |>
+  filter(REGION != "Outlying Regions") |>
+  mutate(across(where(is.character), as.factor)) ->
+college2
+```
+
+-   Use the {boot} package with `college2` to report the prediction MSE for a full model (`ENDOWBEGIN` on the other data) based on K-10 fold cross-validation adjusted deviance.
+
+```{r}
+library(boot)
+set.seed(123)
+
+lm_full <- glm(ENDOWBEGIN ~ ., data = college2)
+
+cv_error <- cv.glm(college2, lm_full, K = 10)
+cv_error$delta[1]
+
+```
+
+
+## Regularization via Shrinkage
+
+Use LASSO with cross validation to model `ENDOWBEGIN` on the other variables in `college2` and find the best lambda.
+
+- Create model matrices for `X` and `Y`.
+- Use `set.seed(123)` for the cross validation.
+```{r}
+library(glmnet)
+set.seed(123)
+
+x <- model.matrix(ENDOWBEGIN ~ ., college2)[, -1]
+y <- college2$ENDOWBEGIN
+```
+
+
+-   Plot the result of the cross validation.
+
+```{r}
+lasso_cv <- cv.glmnet(x, y, alpha = 1, standardize = TRUE)
+plot(lasso_cv)
+```
+
+-   Show the result and identify whether `lambda-min` or `lambda.1se` has fewer non-zero variables?
+
+```{r}
+coef(lasso_cv, s = "lambda.min")
+```
+```{r}
+coef(lasso_cv, s = "lambda.1se")
+```
+lambda-min has fewer zero variables.
+
+
+-   Show the coefficients for `lambda.1se` and discuss which were driven to zero if any.
+```{r}
+coef(lasso_cv, s = "lambda.1se")
+```
+there pratically all were driven to zero except for AVGFACSAL.
+
+-   Do any of the +/- signs of the coefficients for the variables surprise you?
+using the labmda-min method, i would say a suprising result is colleges with a higher percentage of first-gen students have a higher endowement because i would expect the college to be spending the extra money on first-gen scholarships rather than the endowement.
+
+What is the cross-validated predicted MSE from the model?
+```{r}
+lasso_cv$cvm[lasso_cv$lambda == lasso_cv$lambda.1se]
+```
+
+
+
+## Principal components.
+
+Calculate the principal components using the `X` model matrix you created earlier, with scaling, and show the scree plot.
+
+```{r}
+pca <- prcomp(x, scale. = TRUE)
+summary(pca)
+plot(pca, type = "l")
+```
+
+-   Interpret the scree plot
+
+the line gradually flattens after 2 but not quite flat. i would still recomment using 2-3 PCA components.
+
+Given the scree plot, choose to create **either** a PCR **or** a PLSR model.
+
+I choose PSLR
+```{r}
+library(pls)
+set.seed(123)
+plsr_model <- plsr(ENDOWBEGIN ~ ., data = college2, scale = TRUE, validation = "CV")
+validationplot(plsr_model, val.type = "MSEP")
+```
+```{r}
+summary(plsr_model)
+```
+it takes 13 components to explain 90% of variation in the x variables.
+it takes 3 components to explain 40% of components in the y variables.
+
+Create the model with scaling and K=10 fold cross-validation. (Use seed 123).
+
+How many principal components are
+
+-   Needed to explain 90% of the total variation *among X-variables*?
+-   Needed to explain 40% of the total variation *of the response*, `ENDOWBEGIN`?
+-   What is the optimal number of PCs based on adjusted Cross-Validation RMSEP?
+-   What is the adjusted Cross Validation MSEP for the optimal number of PCs
+-   Show the validation plot.
+```{r}
+validationplot(plsr_model, val.type = "RMSEP")
+```
+optimal number of CVs are around 3-4
+
+
+## Summary
+
+Create a summary table showing the method, the MSE, and the number of predictors.
+
+-   Recommend a model for predicting `ENDOWBEGIN` for new observations and explain your choice.
+
+
+| Method              | Predicted MSE | Number of Predictors |                                                 
+|----------|:-----------:|:----:|
+| Linear Model (Reduced) |       | | 
+| LASSO lambda.1se    |          |  |
+| PCR                 |       |  |
+| PLSR                 |       |  |
+
+```{r}
+library(tibble)
+library(boot)
+library(glmnet)
+library(pls)
+
+# 1. Reduced Linear Model (lm_full assumed to be fitted on college2)
+set.seed(123)
+cv_lm <- cv.glm(college2, lm_full, K = 10)
+mse_lm <- cv_lm$delta[1]
+num_lm <- length(coef(lm_full)) - 1  # exclude intercept
+
+# 2. LASSO (lambda.1se from lasso_cv)
+mse_lasso <- lasso_cv$cvm[lasso_cv$lambda == lasso_cv$lambda.1se]
+coef_lasso <- coef(lasso_cv, s = "lambda.1se")
+num_lasso <- sum(coef_lasso != 0) - 1  # exclude intercept
+
+# 3. PLSR (from plsr_model)
+rmsep_plsr <- RMSEP(plsr_model, estimate = "adjCV")
+mse_plsr <- min(rmsep_plsr$val[1,1,-1])  # remove Comp 0
+num_plsr <- which.min(rmsep_plsr$val[1,1,-1])
+
+# Combine into a summary tibble
+model_summary <- tibble(
+  Method = c("Linear Model (Reduced)", 
+             "LASSO (lambda.1se)", 
+             "PLSR"),
+  Predicted_MSE = c(mse_lm, mse_lasso, mse_plsr),
+  Num_Predictors = c(num_lm, num_lasso, num_plsr)
+)
+
+# Print table
+model_summary
+
+```
+
+
+## Classification with SVM (Optional Extra Credit 4 points)
+
+We now want to predict whether a new college is Private or Public based on the data in `college2`.
+
+Tune a Support Vector Machine model to find the best cost and kernel.
+
+-   Use the range of costs in `seq(4.0, 6.0, 0.25)` and the linear and radial kernels.
+
+What is the best cost value and the best kernel and the cross-validated error rate?
+
+
+Create a model with the best parameters
+
+-   How many support vectors are there?
+
+
+Plot the results looking at `ADM_RATE` and `AVGFACSAL`.
+
+-   Comment on the plot
+```{r}
+library(e1071)
+rm(svm)
+# Tune separately for linear and radial kernels
+set.seed(123)
+svm_linear <- tune(
+  svm, CONTROL ~ ADM_RATE + AVGFACSAL,
+  data = college2,
+  kernel = "linear",
+  ranges = list(cost = seq(4.0, 6.0, 0.25))
+)
+
+set.seed(123)
+svm_radial <- tune(
+  svm, CONTROL ~ ADM_RATE + AVGFACSAL,
+  data = college2,
+  kernel = "radial",
+  ranges = list(cost = seq(4.0, 6.0, 0.25))
+)
+
+# Extract best cost and error for linear
+best_cost_linear <- svm_linear$best.parameters$cost
+best_error_linear <- svm_linear$best.performance
+
+# Extract best cost and error for radial
+best_cost_radial <- svm_radial$best.parameters$cost
+best_error_radial <- svm_radial$best.performance
+
+# Determine overall best kernel and cost
+if (best_error_linear < best_error_radial) {
+  best_kernel <- "linear"
+  best_cost <- best_cost_linear
+  best_error <- best_error_linear
+} else {
+  best_kernel <- "radial"
+  best_cost <- best_cost_radial
+  best_error <- best_error_radial
+}
+
+# Print results
+cat("Best kernel:", best_kernel, "\n")
+cat("Best cost:", best_cost, "\n")
+cat("Cross-validated error rate:", best_error, "\n")
+```
+
+
+```{r}
+library(e1071)
+final_svm <- svm(CONTROL ~ ADM_RATE + AVGFACSAL, data = college2,
+                 kernel = "radial", cost = 4)
+
+```
+
+```{r}
+final_svm
+```
+617 support vectors
+
+```{r}
+plot(final_svm, data = college2[, c("ADM_RATE", "AVGFACSAL", "CONTROL")],
+     main = "SVM: ADM_RATE vs AVGFACSAL")
+```
+

@@ -1,0 +1,204 @@
+---
+title: "Homework 4"
+author: "Daniel Tshiani"
+date: "2025-06-01"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1
+## a
+```{r}
+set.seed(1)
+x1 = runif(100)
+x2 = 0.5*x1+rnorm(100)/10
+y = 2 + 2*x1 + 0.3*x2 + rnorm(100)
+```
+the form of the linear model is:
+y = 2 + 2*x1 + 0.3*x2 + error
+
+# b
+```{r}
+cor(x1,x2)
+plot(x1, x2)
+```
+# c
+```{r}
+lm <- lm(y~x1+x2)
+summary(lm)
+```
+beta0 is 2.13
+beta1 is 1.44
+beta2 is 1.01
+the p value for beta1 is 0.0487. this is less than our standard p value of 0.05. therefore we reject the null of beta1 = 0.
+on the other hand, the p value for beta2 is 0.3754. this is greater than 0.05 so we fail to reject the null of beta 2 = 0.
+
+## d
+```{r}
+lm2 <- lm(y~x1)
+summary(lm2)
+```
+according to this model x1 is significant to the 1% level meanwhile the previous model was significant to the 5% level. we would still fail to reject the null of beta1 = 0
+
+## e
+```{r}
+lm3 <- lm(y~x2)
+summary(lm3)
+```
+in this model x2 is significant to the 1% level meanwhile in the other model x2 was not significant. in this model we would fail to reject the null of x2=0.
+
+## f
+yes they do contradict eachother, especially for x2 because in one model its not significant at all and the next model it is significant to the 1% level. x1 also increased in significance in the model without x2.
+
+## g
+```{r}
+x1 = c(x1, 0.1)
+x2 = c(x2, 0.8)
+y = c(y, 6)
+```
+
+```{r}
+lm4 <- lm(y~x1+x2)
+summary(lm4)
+```
+this point seems to have made x2 statistically significant instead of x1. the slope for x1 decreased and the slop for x2 increases.
+
+```{r}
+lm5 <- lm(y~x1)
+summary(lm5)
+```
+the slope for x1 slightly decreased and x1 remained statistically significant.
+
+```{r}
+lm6 <- lm(y~x2)
+summary(lm6)
+```
+
+the slope increased and x2 remained statistically significant compared to the x2 model above.
+
+```{r}
+outliers <- rstudent(lm4)
+outliers <- abs(outliers)
+outliers <- outliers[outliers > 2]
+outliers
+```
+if i am using 2 as the threshold, then there are 5 outliers but if i am using 3 as the threshold there are no outliers.
+
+```{r}
+influence <- cooks.distance(lm4)
+cook_threshold <- 4/101 
+influence[influence > cook_threshold]
+```
+there appears to be 8 points with a big influence but we can also see that the 101st point the was added last has a massive leverage at 1.019. compared to the others, the next highest is 0.6
+
+## h
+```{r}
+summary(lm)$coefficients
+```
+
+```{r}
+summary(lm2)$coefficients
+```
+
+```{r}
+summary(lm3)$coefficients
+```
+
+the intercept in lm3 is the most reliable 
+x1 in lm2 is the most reliable
+x2 in lm3 is the most reliable
+these were where the standard error were the lowest.
+
+## i
+```{r}
+library(car )
+vif(lm)
+```
+I would've expect there to be more multicolinearity. usually 5 and above is problematic and based on the analysis above it sounded like there was alot of multicolinearity but a score of 3 suggest moderate colinieartiy.
+
+# 2
+beta hat1 is an alternative way to estimate the slope in a linear regression model, and it is unbiased. However, I would prefer the least squares estimator because it is more commonly used and generally performs better in practice.
+
+# 3
+## a
+```{r}
+odds <- 0.37
+probability <- odds / (1 + odds)
+probability
+```
+
+about 27% of people with an odds of 0.37 will default
+
+## b
+```{r}
+probability <- 0.16
+odds <- probability / (1 - probability)
+odds
+```
+The odds of default are 0.1905 
+
+# 4
+## a
+```{r}
+beta0 <- 6
+beta1 <- 0.05
+beta2 <- 1
+
+hours_studied <- 40
+gpa <- 3.5
+
+model <- beta0 + beta1 * hours_studied + beta2 * gpa
+
+probability <- 1 / (1 + exp(-model))
+probability
+```
+
+The estimated probability of getting an A is 99%
+
+## b
+```{r}
+linear_sum <- -(beta0 + beta2 * gpa)
+hours_needed <- linear_sum / beta1
+hours_needed
+```
+I am getting -190 which is not possible. i think the gpa is already high enough so the model is predicting negative hours.
+
+# 5
+## a
+
+```{r}
+library(tibble)
+
+df <- data.frame(
+  X1 = c(0, 2, 0, 0, 1, 1),
+  X2 = c(3, 0, 1, 1, 0, 1),
+  X3 = c(0, 0, 3, 2, 1, 1)
+)
+
+Y = c("Red", "Red", "Red", "Green", "Green", "Red")
+
+euclidean_distances <- apply(df, 1, function(row) {
+  sqrt(sum(row^2))
+})
+
+df$Y <- Y
+
+df$DistanceFromOrigin <- euclidean_distances
+
+print(df)
+```
+
+## b
+when K=1 the 5th observation has the smallest distance so we would predict green.
+
+## c
+when K=3 the 5th, 6th, and 2nd observations have the smallest distances. there responses are green, red, and red. So we would predict red.
+
+## d
+I would expect the best value for k to be small because a smalll K would accomadate more flexibility.
+

@@ -1,0 +1,161 @@
+---
+title: "Lab 3"
+author: "Daniel Tshiani"
+date: "2025-05-16"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(readr)
+library(ggplot2)
+library(lmtest)
+```
+
+# Excersice 1
+## a
+
+```{r}
+USpop <- read_csv("../data/USpop.csv")
+```
+```{r}
+ggplot(data = USpop, mapping = aes(y = Population, x = Year))+
+  geom_point()
+```
+
+
+## b
+```{r}
+model <- lm(Population ~ Year, data = USpop)
+summary(model)
+```
+```{r}
+ggplot(data = USpop, mapping = aes(y = Population, x = Year))+
+  geom_point() +
+  geom_smooth(method = "lm", se=F)
+```
+
+when looking at the plot, it looks like the linear model does not provide the best fit.
+
+## c
+```{r}
+summary(model)
+```
+multiple R-squared is 0.9193 and adjusted R-squared is 0.9155. They both suggest the linear model is a good choice however, when I look at the plot i wouldn't agree with that.
+
+## d
+```{r}
+predict(model, newdata = data.frame(Year = 2030))
+```
+
+I dont think its the best prediction because when i look at the graph, it looks like the population increases exponentially rather than linearly.
+
+## e
+```{r}
+USpop$residuals <- resid(model)
+USpop$fitted <- fitted(model)
+
+ggplot(data = USpop, aes(x = fitted, y = residuals)) +
+  geom_point()+
+  geom_hline(yintercept = 0)
+```
+
+the residual plot looks like a quadratic function so key variables could be ommitted or we need to use a quadric variable in our model.
+
+## f
+```{r}
+model2 <- lm(Population ~ Year +I(Year^2), data = USpop)
+summary(model2)
+```
+
+
+```{r}
+ggplot(data = USpop, aes(x = Year, y = Population)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x + I(x^2), se = F)
+```
+this looks like a good fit.
+
+## g
+
+```{r}
+predict(model2, newdata = data.frame(Year = 2030))
+```
+I think this is a reasonable prediction.
+
+# exercise 2
+
+## a
+```{r}
+rm(model, model2, USpop)
+load("../data/Auto-3.rda")
+```
+
+```{r}
+model <- lm(mpg ~ year + acceleration + horsepower + weight, data = Auto)
+summary(model)
+```
+```{r}
+Auto$residuals <- resid(model)
+Auto$fitted <- fitted(model)
+
+ggplot(data = Auto, aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0)
+```
+```{r}
+predictors <- c("year", "acceleration", "horsepower", "weight")
+
+for (var in predictors) {
+  p <- ggplot(Auto, aes_string(x = var, y = "residuals")) +
+    geom_point() +
+    geom_hline(yintercept = 0) 
+  print(p)
+}
+```
+
+
+## b
+```{r}
+student_res <- rstudent(model)
+n <- nrow(Auto)               
+alpha <- 0.05                 
+df <- model$df.residual         
+t_crit <- qt(1 - alpha / (2 * n), df)
+```
+
+```{r}
+outliers <- which(abs(student_res) > t_crit)
+Auto[outliers, ]
+```
+
+## c
+```{r}
+shapiro.test(student_res)
+```
+the p value is less than 0.05 which means we reject the null. the residuals are likely not normally distributed.
+
+```{r}
+qqnorm(student_res)
+qqline(student_res, col = "red", lwd = 2)
+```
+the qq plot confirms non normal distribution because the point deviated from the reference line towards the ends.
+
+## d
+```{r}
+bptest(model)
+```
+the p value is less than 0.05 which mean we reject the null. this suggest that the residuals do not have constant variance.
+## e
+
+```{r}
+plot(model, which = 4)
+```
+
+I would say there are a handful of influential data.

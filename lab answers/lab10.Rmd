@@ -1,0 +1,129 @@
+---
+title: "Lab 10"
+author: "Daniel Tshiani"
+date: "2025-06-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# a
+```{r}
+library(MASS)
+library(tidyverse)
+
+data("Boston")
+cor(Boston)
+
+```
+# b
+```{r}
+lm.ridge(medv ~., data = Boston)$coef |> round(2)
+```
+# c
+```{r}
+lm.ridge(medv ~., lambda = 3, data = Boston)$coef |> round(2)
+```
+```{r}
+lm.ridge(medv ~., lambda = 10, data = Boston)$coef |> round(2)
+```
+```{r}
+lm.ridge(medv ~., lambda = 100, data = Boston)$coef |> round(2)
+```
+as lamba increases, the slopes gravitate towards zero
+
+# d
+```{r}
+rr <- lm.ridge(medv ~., lambda = seq(0, 100, 1), data = Boston)
+
+MASS::select(rr)
+```
+the best lambda to choose is 4
+
+# e
+```{r}
+library(glmnet)
+reg <- lm(medv ~ ., data = Boston) 
+x <- model.matrix(reg)
+dim(x)
+```
+
+```{r}
+x <- x[, -1]
+dim(x)
+```
+```{r}
+y <- Boston$medv
+```
+
+```{r}
+rr <- glmnet(x,y, alpha=0)
+```
+
+
+# f
+```{r}
+set.seed(123)
+rr_cv <- cv.glmnet(x,y, alpha =0)
+rr_cv
+```
+```{r}
+plot(rr_cv)
+```
+ lambda min is 0.678 so that is the best lambda to choose.
+ 
+# g
+```{r}
+coef(rr_cv, s = "lambda.min") |> round(2) 
+```
+the lambda that min MSE is 0.678
+
+# h
+```{r}
+lr <- glmnet(x, y, alpha = 1)
+lr
+```
+
+# i
+```{r}
+set.seed(123)
+lr_cv <- cv.glmnet(x, y, nfolds = 10)
+lr_cv
+```
+```{r}
+coef(lr_cv, s = "lambda.min")
+```
+
+# j
+```{r}
+set.seed(123)
+n <- nrow(x)
+train_index <- sample(1:n, n * 0.5)  
+test_index <- setdiff(1:n, train_index)
+
+x_train <- x[train_index, ]
+y_train <- y[train_index]
+x_test  <- x[test_index, ]
+y_test  <- y[test_index]
+
+lasso_cv <- cv.glmnet(x_train, y_train, alpha = 1)
+best_lambda <- lasso_cv$lambda.min
+
+y_pred <- predict(lasso_cv, s = best_lambda, newx = x_test)
+
+test_mse <- mean((y_test - y_pred)^2)
+test_mse
+```
+
+
+
+
+
+
+
+
+

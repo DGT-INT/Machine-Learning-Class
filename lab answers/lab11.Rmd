@@ -1,0 +1,84 @@
+---
+title: "Lab 11"
+author: "Daniel Tshiani"
+date: "2025-06-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1
+
+```{r}
+library(pls)
+load("../data/Auto-3.rda")
+```
+
+
+## a
+```{r}
+pcr.fit = pcr(mpg~.-name-origin+as.factor(origin),data=Auto)
+
+lm.fit <- lm(mpg~.-name-origin+as.factor(origin),data=Auto)
+```
+
+```{r}
+summary(pcr.fit)
+```
+```{r}
+summary(lm.fit)
+```
+
+with OLS, about 82% of variation is explained in the model. in PCA, about 82% of variation is explained in the model with 8 predictors.
+
+## b
+```{r}
+X <-model.matrix(lm.fit)
+library(stats)
+pc <- prcomp(X)
+pc
+```
+```{r}
+screeplot(pc)
+```
+```{r}
+summary(pc)
+```
+
+## c
+```{r}
+pc_s <- prcomp(X[,-1], scale = TRUE)
+pc_s
+```
+
+## d
+```{r}
+set.seed(1234)
+pcr_reg <- pcr(mpg~.-name-origin+as.factor(origin),data=Auto, scale=TRUE, validation = "CV")
+summary(pcr_reg)
+```
+# 2
+
+```{r}
+plsr.fit = plsr(mpg~.-name-origin+as.factor(origin),data=Auto)
+
+summary(plsr.fit)
+```
+```{r}
+pls_reg <- plsr(mpg~.-name-origin+as.factor(origin),data=Auto, scale = T, validation = "CV")
+
+summary(pls_reg)
+```
+
+the model improves up until about 4 or 5 components, then it stays around the 82% of explaination in variation mark.
+
+```{r}
+validationplot(pls_reg)
+```
+
+
+

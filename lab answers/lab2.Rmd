@@ -1,0 +1,125 @@
+---
+title: "Lab 2"
+author: "Daniel Tshiani"
+date: "2025-05-14"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(ggplot2)
+library(splines)
+library(dplyr)
+```
+
+```{r}
+load("../data/Auto-3.rda")
+```
+
+
+# Exercise 1
+
+## a
+
+```{r}
+model <- lm(mpg ~ weight, data = Auto)
+model
+```
+
+```{r}
+ggplot(data = Auto, mapping = aes(x = weight, y = mpg))+
+  geom_point()+
+  geom_smooth(method = "lm", se = F, color = "red", size = 3)
+```
+
+## b
+```{r}
+ggplot(data = Auto, mapping = aes(x = weight, y = mpg))+
+  geom_point()+
+  geom_smooth(method = "lm", se = F, color = "red", size = 3, formula = y ~ bs(x, df = 2))
+```
+
+this one defaults to 3 splines but i noticed the curve more accurately then the curve in question 1.
+
+
+## c
+```{r}
+ggplot(data = Auto, mapping = aes(x = weight, y = mpg))+
+  geom_point()+
+  geom_smooth(method = "lm", se = F, color = "red", size = 3, formula = y ~ bs(x, df = 20))
+```
+
+It looks like we are starting to overfit the model when we fit a spline with 20 DF.
+
+
+```{r}
+ggplot(data = Auto, mapping = aes(x = weight, y = mpg))+
+  geom_point()+
+  geom_smooth(method = "lm", se = F, color = "red", size = 3, formula = y ~ bs(x, df = 100))
+```
+I would say with 100 DF the model is way over fitted. And this would be a training sample dataset so the model would follow the training dataset closely and not accurately predict the testing dataset.
+
+## d
+the last spline produced is flexible due to the high number of DF. I would say yes, it matches the training data well. I don't think this model would be powerful for prediction because its too focused on the training data and it wouldnt be as focused on the testing data.
+
+# Exercise 2
+
+##a
+```{r}
+training <- Auto %>%
+  mutate(n = row_number())%>%
+  filter(n <= max(row_number()/2))
+
+testing <- Auto %>%
+  mutate(n = row_number())%>%
+  filter(n <= max(row_number()/2))
+```
+
+##b
+```{r}
+spline_model <- lm(mpg ~ bs(weight, df = 5), data = training)
+
+predictions <- predict(spline_model, newdata = testing)
+mse <- mean((testing$mpg - predictions)^2)
+print(mse)
+```
+
+## c
+
+```{r}
+splines <- seq(5,100,5)
+mse_values <- numeric(length(splines))
+
+for(i in seq_along(splines)) {
+  df <- splines[i]
+  
+  spline_model <- lm(mpg ~ bs(weight, df = df), data = training)
+  predictions <- predict(spline_model, newdata = testing)
+  mse_values[i] <- mean((testing$mpg - predictions)^2)
+} 
+  results <- data.frame(df = splines, mse = mse_values)
+  
+  head(results,10)
+
+```
+
+## d
+```{r}
+ggplot(data = results, mapping = aes(x = df, y = mse))+
+  geom_point()
+```
+
+
+
+
+
+
+
+
+

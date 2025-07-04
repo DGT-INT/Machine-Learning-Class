@@ -1,0 +1,118 @@
+---
+title: "Homework 2"
+author: "Daniel Tshiani"
+date: "2025-05-25"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1
+- for TV
+Ho: TV does not effect the number of units sold
+Ha: TV effects the number of units sold
+the P-value is < 0.01 which means we reject the Null.
+we conclude that a one unit increase in TVs increases the number of units sold by about 0.046 units.
+
+- for radio
+Ho: radio does not effect the number of units sold
+Ha: radio effects the number of units sold
+the P-value is < 0.01 which means we reject the Null.
+we conclude that a one unit increase in radios increases the number of units sold by about 0.189 units.
+
+- for newspaper
+Ho: newspaper does not effect the number of units sold
+Ha: newspaper effects the number of units sold
+the P-value is > 0.01 which means we fail to reject the Null.
+we conclude that does not have a significant effect of the number of units sold.
+
+# 2
+StartingSalary = beta0 + beta1·GPA + beta2·IQ + beta3·Gender + beta4·(GPA × IQ) + beta5·(GPA × Gender)
+
+Estimated model:
+StartingSalary = 50 + 20·GPA + 0.07·IQ + 35·Gender + 0.01·(GPA × IQ) - 10·(GPA × Gender)
+
+
+## a
+- For a fixed value of IQ and GPA, males earn more on average than females provided that
+the GPA is high enough
+
+## b
+```{r}
+50 + 20*4 + 0.07*110 + 35*1 + 0.01*(4 * 110) - 10*(4 * 1)
+```
+
+## c
+False, that logic is referring to how big or small the effect of the interaction term is if there is an effect. However, to determine if there is little evidence of the interaction term we would need to look at its P-value.
+
+# 3
+## a
+the cubic model would have a lower RSS. It has more flexibility to fit the data, so its training RSS will be less than or equal to that of the linear model.
+
+## b
+When it comes to testing data, I would expect the cubic model to have a higher RSS. I think the extra flexiblility in the training part would lead to overfitting for a cubic model, especially when the true relationship is linear. the cubic model would resemble the training data too closely, meanwhile the linear model would be able to capture the overall signal.
+
+## c
+I would still expect the training RSS for the cubic model to be lower than or equal to the training RSS for the linear model. I think adding higher polynomial might not be efficient, however it wouldnt increase RSS for training data, especailly if we know the relationship is not linear. It would give us a similar RSS or lower.
+
+## d
+I dont think we have enough information to tell. We would probably need to know more about the shape of the data and how far from linear it is.
+
+# 4
+
+## a
+```{r}
+load("../data/College.rda")
+```
+## b
+```{r}
+summary(College)
+```
+## c
+```{r}
+pairs(College[, 1:10])
+```
+## d
+```{r}
+plot(Outstate ~ Private, data = College,
+     main = "Out-of-State Tuition by Private vs Public",
+     ylab = "Out-of-State Tuition",
+     xlab = "Private School?")
+```
+## e
+```{r}
+Elite = rep ("No",nrow(College))
+Elite [College$ Top10perc > 50] = "Yes"
+Elite = as.factor(Elite)
+College = data.frame(College,Elite)
+```
+
+```{r}
+summary(College$Elite)
+```
+```{r}
+plot(Outstate ~ Elite, data = College,
+     main = "Out-of-State Tuition by Elite status",
+     ylab = "Out-of-State Tuition",
+     xlab = "Elite School?")
+```
+
+## f
+```{r}
+hist(College$Apps, breaks = 20)
+hist(College$Accept, breaks = 40)
+hist(College$Enroll, breaks = 60)
+hist(College$Personal, breaks = 80)
+par(mfrow=c(2,2))
+```
+## g
+```{r}
+lm(data = College, Enroll ~Grad.Rate + PhD + Terminal + Expend)
+```
+
+# 5
+when we calculate the line, we’re trying to minimize how far off the predictions are from the actual data. The math behind it works out so that the best-fitting line naturally ends up passing through that center point of the data, which is the point (mean of x, mean of y). it’s kind of like the line is balancing the data, and the center of balance is right at the average point. So no matter what the data looks like (as long as it's a simple linear regression), the line will always go through it.

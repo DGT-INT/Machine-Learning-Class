@@ -1,0 +1,188 @@
+---
+title: "Lab 2"
+author: "Daniel Tshiani"
+date: "2025-05-25"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ 
+```{r}
+library(ISLR)
+library(dplyr)
+```
+
+# 1
+
+```{r}
+load("../data/Auto-3.rda")
+```
+
+## b
+```{r}
+library(dplyr)
+
+Auto <- Auto %>%
+  mutate(Economy = case_when(
+    mpg <= 17 ~ "Heavy",
+    mpg <= 22.75 ~ "OK",
+    mpg <= 29 ~ "Eco",
+    mpg > 29 ~ "Excellent"
+  )) %>%
+  mutate(Economy = as.factor(Economy)) %>%
+  mutate(origin = as.factor(origin))
+```
+## c
+```{r}
+n <-  nrow(Auto)
+set.seed(1234)
+training_data <-  sample(n, n/2) 
+
+train_set <- Auto[training_data, ]  
+test_set  <- Auto[-training_data, ]  
+```
+
+## d
+```{r}
+library(class)
+
+x_train <- train_set %>%
+  select(mpg:origin)
+
+x_test <- test_set %>%
+  select(mpg:origin)
+
+cl <- train_set$Economy
+
+y_hat <- knn(train = x_train, test = x_test, cl = cl, k = 4)
+```
+
+```{r}
+y <- test_set$Economy
+y_test <- test_set$Economy
+
+confusion_matrix <- table(y_test,y_hat)
+print(confusion_matrix)
+```
+```{r}
+classification_rate <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+print(paste("Classification rate:", round(classification_rate, 4)))
+```
+
+## e
+```{r}
+accuracy_values <- numeric(20)
+
+for (k in 1:20) {
+  knn_pred <- knn(train = x_train, test = x_test, cl = cl, k = k)
+  confusion_matrix <- table(Predicted = knn_pred, Actual = test_set$Economy)
+  accuracy_values[k] <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+}
+
+# Print accuracy for each k
+print(accuracy_values)
+
+# Optional: plot accuracy vs k
+plot(1:20, accuracy_values, type = "b", 
+     xlab = "Number of Neighbors (k)", 
+     ylab = "Classification Rate",
+     main = "K vs Classification Rate")
+```
+it looks like the classification is highest when k is 13.
+
+# 2
+
+## a
+```{r}
+library(readr)
+depression <- read.csv("../data/depression_data.csv")
+
+depression <- na.omit(depression)
+```
+
+## b
+```{r}
+depression <- depression%>%
+  mutate(Diagnosis = as.factor(Diagnosis),
+         Guardian_status = as.factor(Guardian_status),
+         Gender = as.factor(Gender))
+```
+
+
+```{r}
+model <- glm(Diagnosis ~ Gender + Guardian_status + Cohesion_score + Depression_score,
+             data = depression, 
+             family = binomial)
+summary(model)
+```
+```{r}
+predicted_probs <- predict(model, type = "response")
+predicted_class <- ifelse(predicted_probs > 0.3, 1, 0)
+table(True = depression$Diagnosis, Predicted = predicted_class)
+```
+```{r}
+mean(predicted_class == depression$Diagnosis)  # Classification accuracy
+1 - mean(predicted_class == depression$Diagnosis)  # Training error rate
+```
+
+```{r}
+conf_mat <- table(True = depression$Diagnosis, Predicted = predicted_class)
+sensitivity <- conf_mat["1", "1"] / sum(conf_mat["1", ])
+sensitivity
+```
+
+
+## c
+```{r}
+set.seed(123)  
+
+n <- nrow(depression)
+train_index <- sample(1:n, size = n * 0.7)
+
+train_data <- depression[train_index, ]
+test_data  <- depression[-train_index, ]
+```
+
+```{r}
+model <- glm(Diagnosis ~ Gender + Guardian_status + Cohesion_score + Depression_score,
+             data = train_data,
+             family = binomial)
+```
+
+```{r}
+test_probs <- predict(model, newdata = test_data, type = "response")
+test_pred <- ifelse(test_probs > 0.3, 1, 0) 
+
+```
+
+```{r}
+test_actual <- test_data$Diagnosis
+test_pred <- factor(test_pred, levels = levels(test_actual))
+```
+
+```{r}
+conf_matrix <- table(True = test_actual, Predicted = test_pred)
+print(conf_matrix)
+```
+## d
+```{r}
+library(pROC)
+
+roc_obj <- roc(test_data$Diagnosis, test_probs)
+plot(roc_obj, main = "ROC Curve for Depression Diagnosis")
+
+```
+
+the curve ventures off closer to the top left so i would say the model is decent.
+
+
+
+
+
+
+

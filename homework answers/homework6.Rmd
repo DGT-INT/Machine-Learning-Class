@@ -1,0 +1,208 @@
+---
+title: "Homework 6"
+author: "Daniel Tshiani"
+date: "2025-06-15"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1
+
+i. nonlinear
+ii. nonlinear
+iii. ridge regression
+iv. lasso
+
+# 2
+## a
+```{r}
+Y <- 1
+lambda <- 2
+```
+
+```{r}
+beta <- seq(-3, 3, length = 100)
+
+RSS <- (Y - beta)^2
+ridge_obj <- RSS + lambda * beta^2
+lasso_obj <- RSS + lambda * abs(beta)
+
+plot(beta, ridge_obj, type = "l", col = "blue", ylab = "Objective", main = "Ridge vs Lasso")
+lines(beta, lasso_obj, col = "red")
+legend("topright", legend = c("Ridge", "Lasso"), col = c("blue", "red"), lty = 1)
+
+```
+
+```{r}
+beta_ridge <- Y / (1 + lambda)           # 1 / (1 + 2) = 0.333
+beta_lasso <- if (Y > lambda / 2) Y - lambda / 2 else if (Y < -lambda / 2) Y + lambda / 2 else 0
+
+beta_ridge
+beta_lasso
+```
+
+## b
+```{r}
+lambda_vals <- seq(0.01, 10, length = 100)
+beta_ridge <- Y / (1 + lambda_vals)
+beta_lasso <- ifelse(Y > lambda_vals / 2, Y - lambda_vals / 2,
+                ifelse(Y < -lambda_vals / 2, Y + lambda_vals / 2, 0))
+
+plot(lambda_vals, beta_ridge, type = "l", col = "blue", ylim = c(0,1),
+     ylab = "Estimated Coefficient", xlab = "Lambda", main = "Ridge vs Lasso Estimates")
+lines(lambda_vals, beta_lasso, col = "red")
+legend("topright", legend = c("Ridge", "Lasso"), col = c("blue", "red"), lty = 1)
+
+```
+
+
+# 3
+
+## a
+```{r}
+set.seed(1234)
+x <- rnorm(100)
+error <- rnorm(100)
+```
+
+## b
+```{r}
+beta0 <- 1
+beta1 <- 2
+beta2 <- 3
+beta3 <- 4
+Y <- beta0 + beta1*x + beta2*x^2 + beta3*x^3 + error
+```
+
+## c
+```{r}
+library(leaps)
+
+x_poly <- data.frame(poly(x,10, raw = T))
+data <- data.frame(Y, x_poly)
+best_fit <- regsubsets(Y ~., data = data, nvmax = 10)
+
+summary_best_fit <- summary(best_fit)
+
+plot(summary_best_fit$cp)
+plot(summary_best_fit$bic)
+plot(summary_best_fit$adjr2)
+```
+
+using CP, it looks like 3 predictors is the best.
+same for BIC. 3 predictors looks best.
+ADJR2 also suggest 3 predictos is the best.
+so the best model would be Y = beta0 + beta1 x1 + beta2 x1^2 + beta3 x1^3
+
+## d
+```{r}
+best_fit <- regsubsets(Y ~., data=data, nvmax = 10, method = "forward")
+
+summary_best_fit <- summary(best_fit)
+
+plot(summary_best_fit$cp)
+plot(summary_best_fit$bic)
+plot(summary_best_fit$adjr2)
+```
+
+
+```{r}
+best_fit <- regsubsets(Y ~., data=data, nvmax = 10, method = "backward")
+
+summary_best_fit <- summary(best_fit)
+
+plot(summary_best_fit$cp)
+plot(summary_best_fit$bic)
+plot(summary_best_fit$adjr2)
+```
+the forward and backward models suggest 3 predictors as well
+
+
+## e
+```{r}
+library(glmnet)
+
+X_matrix <- model.matrix(Y ~ ., data = data)[, -1]
+cv_lasso <- cv.glmnet(X_matrix, Y, alpha = 1)
+
+plot(cv_lasso)
+coef(cv_lasso, s = "lambda.min")
+
+```
+x4 and above got eliminated
+
+## f
+```{r}
+Y <- beta0 + 7 * x^7 + error
+
+data2 <- data.frame(Y, poly(x, 10, raw = TRUE))
+best_fit2 <- regsubsets(Y ~ ., data = data2, nvmax = 10)
+summary_best2 <- summary(best_fit2)
+
+X_matrix2 <- model.matrix(Y ~ ., data = data2)[, -1]
+cv_lasso2 <- cv.glmnet(X_matrix2, Y, alpha = 1)
+plot(cv_lasso2)
+coef(cv_lasso2, s = "lambda.min")
+```
+
+
+# 4
+## a
+```{r}
+load("../data/College.rda")
+library(ISLR)
+library(tidyverse)
+
+set.seed(1234)
+train <- sample(1:nrow(College), nrow(College)/2)
+test <- setdiff(1:nrow(College), train)
+
+train_x <- model.matrix(Apps ~ ., data = College)[train, -1]
+test_x <- model.matrix(Apps ~ ., data = College)[test, -1]
+train_y <- College$Apps[train]
+test_y <- College$Apps[test]
+```
+
+```{r}
+lm_fit <- lm(Apps ~ ., data = College, subset = train)
+pred_lm <- predict(lm_fit, newdata = College[test, ])
+mean((pred_lm - test_y)^2)
+```
+## b
+```{r}
+ridge_fit <- cv.glmnet(train_x, train_y, alpha = 0)
+ridge_pred <- predict(ridge_fit, s = ridge_fit$lambda.min, newx = test_x)
+mean((ridge_pred - test_y)^2)
+```
+
+## c
+```{r}
+lasso_fit <- cv.glmnet(train_x, train_y, alpha = 1)
+lasso_pred <- predict(lasso_fit, s = lasso_fit$lambda.min, newx = test_x)
+mean((lasso_pred - test_y)^2)
+```
+
+## d
+```{r}
+library(pls)
+pcr_fit <- pcr(Apps ~ ., data = College, subset = train, scale = TRUE, validation = "CV")
+validationplot(pcr_fit, val.type = "MSEP")
+
+pcr_pred <- predict(pcr_fit, newdata = College[test, ], ncomp = 5)
+mean((pcr_pred - test_y)^2)
+```
+
+```{r}
+pls_fit <- plsr(Apps ~ ., data = College, subset = train, scale = TRUE, validation = "CV")
+validationplot(pls_fit, val.type = "MSEP")
+
+pls_pred <- predict(pls_fit, newdata = College[test, ], ncomp = 5)
+mean((pls_pred - test_y)^2)
+
+```
+

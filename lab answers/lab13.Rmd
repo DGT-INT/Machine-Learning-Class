@@ -1,0 +1,116 @@
+---
+title: "Lab 13"
+author: "Daniel Tshiani"
+date: "2025-06-14"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(randomForest)
+library(tidyverse)
+```
+
+```{r}
+load("../data/Auto-3.rda")
+attach(Auto)
+```
+# a
+```{r}
+glimpse(Auto)
+```
+```{r}
+Auto <- Auto%>%
+  select(-name)
+```
+
+
+
+```{r}
+rf <- randomForest(mpg ~ ., data = Auto)
+rf
+```
+
+# b
+```{r}
+importance(rf)
+```
+```{r}
+varImpPlot(rf)
+```
+
+displacement is considered the most important predictor.
+
+# c
+```{r}
+set.seed(123)
+train_index <- sample(1:nrow(OJ), nrow(OJ)/2)
+train_data <- OJ[train_index, ]
+test_data <- OJ[-train_index, ]
+```
+
+
+```{r}
+rf_model <- randomForest(mpg ~ . , data = train_data)
+preds <- predict(rf_model, newdata = test_data)
+mse <- mean((preds - test_data$mpg)^2)
+mse
+```
+
+# d
+```{r}
+which.min(rf$mse)
+```
+
+# e
+```{r}
+p <- length(Auto) - 1 
+RF <- OptimalTrees <- Yhat <- RMSEP <- vector(mode = "double", length = p)
+```
+
+```{r}
+set.seed(123)
+for (k in 1:p) {
+  rf <- randomForest(mpg ~., data = train_data)
+  OptimalTrees[k] <- which.min(rf$mse)
+  rf <- randomForest(mpg ~ ., data = train_data, mtry = k, ntree = OptimalTrees[k])
+  Yhat <- predict(rf, newdata = test_data)
+  RMSEP[k] <- sqrt(mean((Yhat - test_data$mpg)^2))
+}
+```
+
+```{r}
+plot(OptimalTrees)
+```
+
+```{r}
+plot(RMSEP)
+```
+
+```{r}
+which.min(RMSEP)
+```
+
+```{r}
+RMSEP[3]
+```
+
+```{r}
+OptimalTrees[3]
+```
+
+
+# f
+```{r}
+ RF <- randomForest(mpg ~ ., data = Auto, mtry = 7,
+                    ntree = which.min(rf$mse))
+ rf
+```
+
+
+

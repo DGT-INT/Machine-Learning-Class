@@ -1,0 +1,63 @@
+---
+title: "Quiz 3"
+author: "Daniel Tshiani"
+date: "2025-06-01"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+p_defective <- 0.04
+p_good <- 1 - p_defective
+
+mu_good <- 4.5
+sd_good <- 0.2
+
+mu_defective <- 4.2
+sd_defective <- 0.2
+
+x <- 4.3  
+
+normal_pdf <- function(x, mu, sigma) {
+  (1 / (sqrt(2 * pi) * sigma)) * exp(- ((x - mu)^2) / (2 * sigma^2))
+}
+
+f_good <- normal_pdf(x, mu_good, sd_good)
+f_defective <- normal_pdf(x, mu_defective, sd_defective)
+
+post_good <- f_good * p_good
+post_defective <- f_defective * p_defective
+
+prob_good <- post_good / (post_good + post_defective)
+prob_defective <- post_defective / (post_good + post_defective)
+
+cat("Posterior probability good:", prob_good, "\n")
+cat("Posterior probability defective:", prob_defective, "\n")
+
+if (prob_good > prob_defective) {
+  cat("Classify as: GOOD (equal penalty)\n")
+} else {
+  cat("Classify as: DEFECTIVE (equal penalty)\n")
+}
+```
+
+```{r}
+loss_good_defective <- 10
+loss_defective_good <- 1
+
+# Adjust decision rule
+if (loss_good_defective * prob_defective > loss_defective_good * prob_good) {
+  cat("Classify as: DEFECTIVE (with penalty ratio)\n")
+} else {
+  cat("Classify as: GOOD (with penalty ratio)\n")
+}
+
+```
+
+

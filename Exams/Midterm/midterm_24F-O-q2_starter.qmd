@@ -1,0 +1,165 @@
+---
+title: "Midterm Q2"
+subtitle: "Daniel stat 627"
+number-sections: true
+embed-resources: true
+format: 
+  html:
+    fontsize: "10pt"
+---
+
+# Q1 in other file
+
+# Starwars Characters
+
+Use R or Python for data analysis. Show and interpret the outputs.
+
+The {dplyr} package contains a data frame with attributes of characters from the `starwars` series. See help or `?dplyr::starwars` for information on the variables.
+
+We want to see if we can predict a characters height based on their mass and possibly other attributes.
+
+Due to the presence of NAs and an extreme value (Jabba the Hut is eight times as massive as the next closest character), we will filter out those rows.
+
+\(a\) Filter the data. Create a scatter plot showing `height` vs `mass` with a non-linear smoother. Interpret the plot in one sentence.
+
+```{r}
+#| message: false
+#| fig-height: 2.5
+library(tidyverse)
+starwars |> 
+  filter(mass < 500) |> 
+  drop_na(sex, mass, height) ->
+  sw
+ggplot(sw, aes(mass, height)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+there appears to be a positive relationship between height and mass.
+
+
+\(b\) Fit a linear regression model to predict height based on mass.
+
+-   Identify the proposed model regression equation and then insert the estimated coefficients into the regression equation
+-   Is mass significant in this prediction? Justify your answer using the $p$-value.
+-   Is the model useful for prediction? Justify your answer using the adjusted $r$-squared.
+
+```{R}
+lm <- lm(height ~ mass,data=sw)
+summary(lm)
+```
+height is significant in the prediction. the p value is less than 0.001 which is significant at the 1% level. the adjusted r squared is 0.5766 which means the model is not too usefull for prediction because is only explains about half of the variance.
+
+\(c\) Test if the modeled relation between height and mass\` is *truly linear* or could a non-linear model could be better.
+
+-   Describe your approach and why it will help answer the question
+-   State the test statistic, the $p$-value, and your conclusion.
+
+```{R}
+lm2 <- lm(height ~ mass + I(mass^2), data = sw)
+anova(lm, lm2)
+```
+for the approach i compared the full model with a nested model. in the full model i have mass and its quadratic. in the reduced model i just have mass so its linear. i am doing a partial f test. the p value is less than 0.001 which means the quadratic model fits the data better. so i conclude that a non-linear model is better. the test statistic (f-stat) is 31.8 which means the quadratic term improved the model alot.
+
+
+\(d\) Add a term for $mass^2$ to the data to add some nonlinearity. Rerun the model with both `mass` and $mass^2$.
+
+```{r}
+sw$mass2 <- sw$mass^2
+
+lm3 <- lm(height~mass2,data = sw)
+summary(lm3)
+```
+
+-   Is the model more useful?
+-   Justify your answer with the results from a statistical test comparing the original model, with just `mass`, to the model with both `mass` and $mass^2$.
+-   Would it be valid to use the same statistical test to compare two models where one has just `mass` and one has just $mass^2$?
+
+I am not sure if you want both mass and mass^2 like i did in lm2 or if you only want just mass^2 like i did in lm3. I determined in question c that lm2 with mass and mass^2 is useful. however for lm3, that model is not usefull because we cant just have the quadratic term. the reduced model would not be considered a nested model making it difficult to use.
+
+\(e\) With just `height` and `mass` (not `mass`^2^), use a validation-set approach (split at 60%), LOOCV, and K-fold cross-validation (**K = 11**) to estimate the **prediction mean squared error** for each method.
+
+-   Treat these as independent runs and set the random number seed to 124 when appropriate to ensure repeatability.
+-   Summarize the answers at the end.
+
+```{R}
+set.seed(124)
+
+n <- nrow(sw)
+train_idx <- sample(1:n, size = floor(0.6 * n))
+train <- sw[train_idx, ]
+test <- sw[-train_idx, ]
+
+model_val <- lm(height ~ mass, data = train)
+pred_val <- predict(model_val, test)
+mse_val <- mean((test$height - pred_val)^2)
+
+# LOOCV
+library(boot)
+cv_loocv <- cv.glm(sw, glm(height ~ mass, data = sw), K = n)
+mse_loocv <- cv_loocv$delta[1]
+
+# K-fold CV (K=11)
+set.seed(124)
+cv_kfold <- cv.glm(sw, glm(height ~ mass, data = sw), K = 11)
+mse_kfold <- cv_kfold$delta[1]
+
+mse_val
+mse_loocv
+mse_kfold
+
+```
+
+```{R}
+cat("Validation-set MSE:", mse_val, "\n")
+cat("LOOCV MSE:", mse_loocv, "\n")
+cat("11-Fold CV MSE:", mse_kfold, "\n")
+
+```
+
+The validation-set approach gave a higher MSE (718.1) compared to both LOOCV (622.9) and 11-fold cross-validation (627.0). This suggests that the model’s performance estimate can vary depending on how the data is split.
+
+\(f\) Can we improve prediction accuracy of the model by including the sex of the character (variable `sex`)?
+
+-   Calculate the prediction MSE of the expended model with `mass` and `sex` using $K$-fold cross-validation where $K=11$.
+-   Note that `sex` is a categorical variable.
+-   Set the random number seed to 124 when appropriate to ensure repeatability.
+
+```{r}
+library(tidyverse)
+
+sw <- sw %>%
+mutate(sex = as.factor(sex))
+
+
+set.seed(124)
+lm4 <- glm(height ~ mass + sex, data = sw)
+
+cv_sex <- cv.glm(sw, lm4, K = 11)
+mse_sex <- cv_sex$delta[1]
+mse_sex
+
+```
+
+mse dropped which means this model improved when we added sex.
+
+\(g\) Interpreting Interactions: Include `mass`, `sex`, *and their interactions* in the linear model with all the data.
+
+-   Compare the summaries for both the model without and with interactions. What do you observe?
+-   For the same value of mass, which sex is expected to be the tallest and why?
+-   Does the answer depend on the value of mass? Explain why or why not.
+-   Suggest looking at a plot or the data as well as the coefficients and $p$-values.
+
+```{R}
+lm5_interactions <- lm(height ~ mass + sex + birth_year + mass * sex, data = sw)
+lm5_no_interactions <- lm(height ~ mass + sex + birth_year, data = sw)
+
+summary(lm5_interactions)
+summary(lm5_no_interactions)
+```
+alot of the data is character variables like name, hair color, skin color so i couldnt include all the data.
+females are expected to be the tallest. both categorical variables male and none have negative slopes and females are the base category. the interaction terms p value are greater than 0.10 so the the interaction is irrelevant. mass and sex do not depend on each other. ahhh i ran out of time.....
+
+\(h\) Extra Credit 1 PT
+
+Describe how a plot of the fitted values for a model with a quantitative response, a quantitative predictor, and a categorical predictor with three levels might appear if the predictors and the interaction affects are significant. How you would interpret it.
+i am low on time but the slop would be different for the different groups if the interaction term is significant. or if the slop is the same the lines would be parallel except one is above another. aaaahhh  i am out of time and wills submit my work so its not late.
